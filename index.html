@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Menu</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f7f4;color:#1a1a1a;padding:1rem}
+.wrap{max-width:600px;margin:0 auto;padding-bottom:2rem}
+.header{background:#2d6a4f;border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;text-align:center}
+.header h1{color:#fff;font-size:22px;font-weight:600;margin-bottom:6px}
+.header p{color:#b7e4c7;font-size:13px;line-height:1.6}
+.pickup-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem}
+.pickup-opt{border:1.5px solid #ddd;border-radius:12px;padding:1rem;cursor:pointer;text-align:center;background:#fff;transition:all .15s}
+.pickup-opt.active{border:2px solid #2d6a4f;background:#f0faf4}
+.pickup-opt .po-label{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.pickup-opt .po-sub{font-size:11px;color:#666}
+.section{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.section-title{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:3px}
+.section-note{font-size:12px;color:#888;margin-bottom:1rem}
+.meal-row{border-top:1px solid #f0f0f0;padding:10px 0}
+.meal-row:first-of-type{border-top:none;padding-top:0}
+.meal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.meal-info{flex:1}
+.meal-name{font-size:14px;font-weight:600;color:#1a1a1a}
+.meal-desc{font-size:12px;color:#777;margin-top:2px;line-height:1.4}
+.qty-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.qty-label{font-size:12px;color:#888}
+.qty-select{font-size:13px;padding:5px 8px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a;cursor:pointer}
+.sides-panel{margin-top:10px;padding:10px 12px;background:#f8faf8;border-radius:8px;border:1px solid #e0ede0}
+.sides-title{font-size:12px;font-weight:600;color:#2d6a4f;margin-bottom:8px}
+.sides-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px}
+.side-cb{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#1a1a1a}
+.side-cb input{accent-color:#2d6a4f;width:14px;height:14px;flex-shrink:0}
+.sides-limit{font-size:11px;color:#aaa;margin-top:6px;font-style:italic}
+.notes-wrap{margin-bottom:1rem}
+.notes-wrap label{font-size:13px;font-weight:600;color:#1a1a1a;display:block;margin-bottom:6px}
+.notes-wrap textarea{width:100%;border:1px solid #ddd;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;color:#1a1a1a;background:#fff;resize:vertical;min-height:80px}
+.summary-box{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.summary-box h2{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:1rem}
+.summary-empty{font-size:13px;color:#aaa;font-style:italic}
+.summary-section{margin-bottom:10px}
+.summary-section-title{font-size:12px;font-weight:600;color:#2d6a4f;margin-bottom:4px}
+.summary-item{font-size:13px;color:#1a1a1a;padding:2px 0;display:flex;justify-content:space-between}
+.si-sides{font-size:11px;color:#777;margin-top:1px}
+.submit-btn{width:100%;padding:14px;background:#2d6a4f;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.submit-btn:disabled{opacity:.45;cursor:not-allowed}
+.confirm-box{display:none;background:#f0faf4;border:1.5px solid #2d6a4f;border-radius:12px;padding:1.5rem;text-align:center;margin-bottom:1rem}
+.confirm-box p{color:#2d6a4f;font-size:16px;font-weight:600}
+.confirm-box span{font-size:13px;color:#555;display:block;margin-top:4px}
+.error-msg{color:#c0392b;font-size:13px;margin-bottom:8px;display:none;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="header">
+  <h1>Weekly Menu</h1>
+  <p>Complete on Monday morning for a Tuesday afternoon pickup.<br>Complete on Thursday morning for a Friday afternoon pickup.</p>
+</div>
+
+<div class="pickup-bar">
+  <div class="pickup-opt" id="po-tue" onclick="selectPickup('tuesday')">
+    <div class="po-label">Tuesday pickup</div>
+    <div class="po-sub">Tuesday dinner through Friday breakfast</div>
+  </div>
+  <div class="pickup-opt" id="po-fri" onclick="selectPickup('friday')">
+    <div class="po-label">Friday pickup</div>
+    <div class="po-sub">Friday dinner through Tuesday breakfast</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Breakfast</div>
+  <div class="section-note">How many of each would you like?</div>
+  <div id="breakfast-items"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Chicken salad</div>
+  <div class="section-note">Pick your favorite varieties — no sides needed.</div>
+  <div id="salad-items"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Casseroles</div>
+  <div class="section-note">Hearty family-style casseroles — no sides needed.</div>
+  <div id="casserole-items"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">One-bowl options</div>
+  <div class="section-note">Complete meals in one bowl — no sides needed.</div>
+  <div id="bowl-items"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Entrée meals</div>
+  <div class="section-note">Pick your entrée quantity, then choose up to 2 sides for each one.</div>
+  <div id="entree-items"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Baked goods</div>
+  <div class="section-note">Pick as many as you like.</div>
+  <div id="baked-items"></div>
+</div>
+
+<div class="notes-wrap">
+  <label for="notes-field">Notes</label>
+  <textarea id="notes-field" placeholder="Any notes or modifications to share?"></textarea>
+</div>
+
+<div class="summary-box">
+  <h2>Order summary</h2>
+  <div id="summary-content"><p class="summary-empty">No items selected yet.</p></div>
+</div>
+
+<div class="confirm-box" id="confirm-box">
+  <p>Complete 💛</p>
+  <span>Sid will take care of the rest!</span>
+</div>
+
+<p class="error-msg" id="error-msg">Please select a pickup day before submitting.</p>
+<button class="submit-btn" id="submit-btn" onclick="submitOrder()">Submit my order</button>
+
+</div>
+
+<script>
+const FORMSPREE = "https://formspree.io/f/xrevqglw";
+
+const MENU = {
+  breakfast:[
+    {name:"Fruit bowl"},{name:"Sausage"},{name:"Bacon"},
+    {name:"Hashbrown casserole (plain)"},{name:"Hashbrown & sausage casserole"},
+    {name:"Biscuits & gravy bowl"},{name:"Scrambled eggs (plain)"},
+    {name:"Scrambled eggs with cheese"},{name:"Strawberry yogurt"},
+    {name:"Blueberry yogurt"},{name:"Peach yogurt"},{name:"Vanilla yogurt"}
+  ],
+  salad:[
+    {name:"Regular",desc:"Apples, grapes, and pecans"},
+    {name:"Plain",desc:"No extras — just creamy rotisserie chicken"},
+    {name:"Southwest Señorita",desc:"Taco-style seasonings and cheese with sour cream"},
+    {name:"Sassy Scotty",desc:"Zesty blend with ranch dressing, bacon, and cheddar cheese"},
+    {name:"Barb-Q",desc:"Traditional style with a hickory-smoked BBQ flavor"}
+  ],
+  casserole:[
+    {name:"Chicken & rice casserole",desc:"Creamy chicken and tender rice baked together in a rich sauce"},
+    {name:"Chicken dressing casserole",desc:"Southern-style chicken layered over savory cornbread dressing"},
+    {name:"King Ranch chicken casserole",desc:"Layers of chicken, tortillas, Rotel, and creamy cheese sauce"},
+    {name:"Stuffed pepper casserole",desc:"All the flavors of stuffed peppers in one easy, hearty bake"},
+    {name:"Hamburger casserole",desc:"Seasoned ground beef, pasta, and cheese baked in a rich tomato sauce"},
+    {name:"Chicken enchilada casserole",desc:"Tender chicken and tortillas smothered in enchilada sauce and melted cheese"},
+    {name:"Baked ziti",desc:"Pasta baked with rich meat sauce and bubbling mozzarella cheese"},
+    {name:"Beef stew",desc:"Slow-cooked tender beef with potatoes and carrots in a savory brown broth"},
+    {name:"Hashbrown & beef casserole",desc:"Seasoned ground beef layered with crispy hashbrowns and melted cheese"},
+    {name:"Creamy Tuscan chicken",desc:"Chicken in a rich garlic cream sauce with sun-dried tomatoes and spinach"}
+  ],
+  bowl:[
+    {name:"Mexican rice, chicken & queso",desc:"Seasoned rice and tender chicken smothered in warm creamy queso"},
+    {name:"Beef & bean chili",desc:"Thick, hearty chili with ground beef, beans, and bold spices"},
+    {name:"White chicken chili",desc:"Creamy, mild chili with tender chicken, white beans, and green chiles"},
+    {name:"Taco bowl",desc:"Seasoned ground beef over rice with cheese, sour cream, and toppings"},
+    {name:"Pot roast",desc:"Melt-in-your-mouth beef roast slow-cooked with carrots and potatoes"}
+  ],
+  entree:[
+    {name:"Grilled chicken",desc:"Tender grilled chicken breast, seasoned simply and cooked through"},
+    {name:"Hamburger steak",desc:"Juicy ground beef patty smothered in a savory onion and mushroom gravy"},
+    {name:"Meat spaghetti",desc:"Hearty ground beef tomato sauce over soft pasta noodles"},
+    {name:"Meatloaf",desc:"Classic comfort meatloaf, moist and tender with a brown sugar glaze"},
+    {name:"Beef tips w/ gravy",desc:"Slow-cooked tender beef tips in a rich, savory brown gravy"},
+    {name:"Mississippi roast",desc:"Fall-apart chuck roast slow-cooked with pepperoncini and buttery au jus"},
+    {name:"BBQ chicken",desc:"Smoky, saucy baked chicken in a sweet and tangy BBQ sauce"},
+    {name:"BBQ pork",desc:"Slow-cooked pulled pork in a rich hickory-smoked BBQ sauce"}
+  ],
+  sides:[
+    "Mac & cheese","Mashed potatoes","Sautéed green beans","Green bean casserole",
+    "Hashbrown & cheese casserole","Cream corn","Whole-kernel corn","Side salad",
+    "Creamy gouda grits","Roasted baby potatoes","Pinto beans","Red beans & rice","Mexican rice"
+  ],
+  baked:[
+    {name:"Protein power balls"},{name:"Brownies"},{name:"Chocolate cookies"},
+    {name:"Sugar cookies"},{name:"Peanut butter cookies"}
+  ]
+};
+
+let pickup=null, state={};
+
+function selectPickup(val){
+  pickup=val;
+  document.getElementById('po-tue').classList.toggle('active',val==='tuesday');
+  document.getElementById('po-fri').classList.toggle('active',val==='friday');
+  document.getElementById('error-msg').style.display='none';
+}
+
+function qtySelect(id,onChange){
+  const s=document.createElement('select');
+  s.className='qty-select';s.id=id;
+  for(let i=0;i<=5;i++){
+    const o=document.createElement('option');
+    o.value=i;o.textContent=i;s.appendChild(o);
+  }
+  s.addEventListener('change',onChange);
+  return s;
+}
+
+function buildSimpleSection(containerId,items,stateKey){
+  state[stateKey]={};
+  const wrap=document.getElementById(containerId);
+  items.forEach((item,i)=>{
+    state[stateKey][i]=0;
+    const row=document.createElement('div');row.className='meal-row';
+    const hdr=document.createElement('div');hdr.className='meal-header';
+    const info=document.createElement('div');info.className='meal-info';
+    const nm=document.createElement('div');nm.className='meal-name';
+    nm.textContent=item.name||item;info.appendChild(nm);
+    if(item.desc){const d=document.createElement('div');d.className='meal-desc';d.textContent=item.desc;info.appendChild(d);}
+    const qw=document.createElement('div');qw.className='qty-wrap';
+    const ql=document.createElement('span');ql.className='qty-label';ql.textContent='Qty:';
+    const qs=qtySelect(`${stateKey}-${i}`,e=>{state[stateKey][i]=parseInt(e.target.value);updateSummary();});
+    qw.appendChild(ql);qw.appendChild(qs);
+    hdr.appendChild(info);hdr.appendChild(qw);
+    row.appendChild(hdr);wrap.appendChild(row);
+  });
+}
+
+function buildEntreeSection(){
+  state.entree={};state.entreeSides={};
+  const wrap=document.getElementById('entree-items');
+  MENU.entree.forEach((item,i)=>{
+    state.entree[i]=0;state.entreeSides[i]=[];
+    const row=document.createElement('div');row.className='meal-row';
+    const hdr=document.createElement('div');hdr.className='meal-header';
+    const info=document.createElement('div');info.className='meal-info';
+    const nm=document.createElement('div');nm.className='meal-name';nm.textContent=item.name;info.appendChild(nm);
+    if(item.desc){const d=document.createElement('div');d.className='meal-desc';d.textContent=item.desc;info.appendChild(d);}
+    const qw=document.createElement('div');qw.className='qty-wrap';
+    const ql=document.createElement('span');ql.className='qty-label';ql.textContent='Qty:';
+    const qs=qtySelect(`entree-${i}`,e=>{
+      const val=parseInt(e.target.value);state.entree[i]=val;
+      const panel=document.getElementById(`sides-panel-${i}`);
+      panel.style.display=val>0?'block':'none';
+      if(val===0){state.entreeSides[i]=[];panel.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);}
+      updateSummary();
+    });
+    qw.appendChild(ql);qw.appendChild(qs);
+    hdr.appendChild(info);hdr.appendChild(qw);row.appendChild(hdr);
+    const panel=document.createElement('div');panel.className='sides-panel';
+    panel.id=`sides-panel-${i}`;panel.style.display='none';
+    const st=document.createElement('div');st.className='sides-title';st.textContent='Pick up to 2 sides:';panel.appendChild(st);
+    const grid=document.createElement('div');grid.className='sides-grid';
+    MENU.sides.forEach(side=>{
+      const lbl=document.createElement('label');lbl.className='side-cb';
+      const cb=document.createElement('input');cb.type='checkbox';cb.value=side;
+      cb.addEventListener('change',()=>{
+        const checked=Array.from(panel.querySelectorAll('input[type=checkbox]:checked'));
+        if(checked.length>2){cb.checked=false;return;}
+        state.entreeSides[i]=checked.map(c=>c.value);updateSummary();
+      });
+      lbl.appendChild(cb);lbl.appendChild(document.createTextNode(side));grid.appendChild(lbl);
+    });
+    panel.appendChild(grid);
+    const lim=document.createElement('div');lim.className='sides-limit';lim.textContent='Maximum 2 sides per entrée';panel.appendChild(lim);
+    row.appendChild(panel);wrap.appendChild(row);
+  });
+}
+
+function updateSummary(){
+  const sections=[
+    {key:'breakfast',label:'Breakfast',items:MENU.breakfast},
+    {key:'salad',label:'Chicken salad',items:MENU.salad},
+    {key:'casserole',label:'Casseroles',items:MENU.casserole},
+    {key:'bowl',label:'One-bowl options',items:MENU.bowl},
+    {key:'baked',label:'Baked goods',items:MENU.baked}
+  ];
+  let html='',hasAny=false;
+  sections.forEach(sec=>{
+    let rows='';
+    Object.entries(state[sec.key]||{}).forEach(([i,qty])=>{
+      if(qty>0){hasAny=true;const name=sec.items[i].name||sec.items[i];rows+=`<div class="summary-item"><span>${name}</span><span>×${qty}</span></div>`;}
+    });
+    if(rows) html+=`<div class="summary-section"><div class="summary-section-title">${sec.label}</div>${rows}</div>`;
+  });
+  let eRows='';
+  Object.entries(state.entree||{}).forEach(([i,qty])=>{
+    if(qty>0){
+      hasAny=true;const name=MENU.entree[i].name;const sides=state.entreeSides[i]||[];
+      eRows+=`<div class="summary-item" style="flex-direction:column;align-items:flex-start"><div style="display:flex;justify-content:space-between;width:100%"><span>${name}</span><span>×${qty}</span></div>${sides.length?`<div class="si-sides">Sides: ${sides.join(', ')}</div>`:`<div class="si-sides" style="color:#aaa">No sides selected yet</div>`}</div>`;
+    }
+  });
+  if(eRows) html+=`<div class="summary-section"><div class="summary-section-title">Entrée meals</div>${eRows}</div>`;
+  document.getElementById('summary-content').innerHTML=hasAny?html:'<p class="summary-empty">No items selected yet.</p>';
+}
+
+function buildOrderText(){
+  const lines=[];
+  lines.push(`PICKUP: ${pickup==='tuesday'?'Tuesday (Tue dinner – Fri breakfast)':'Friday (Fri dinner – Tue breakfast)'}`);
+  lines.push('');
+  const sections=[
+    {key:'breakfast',label:'BREAKFAST',items:MENU.breakfast},
+    {key:'salad',label:'CHICKEN SALAD',items:MENU.salad},
+    {key:'casserole',label:'CASSEROLES',items:MENU.casserole},
+    {key:'bowl',label:'ONE-BOWL OPTIONS',items:MENU.bowl},
+    {key:'baked',label:'BAKED GOODS',items:MENU.baked}
+  ];
+  sections.forEach(sec=>{
+    const rows=[];
+    Object.entries(state[sec.key]||{}).forEach(([i,qty])=>{
+      if(qty>0) rows.push(`  ${sec.items[i].name||sec.items[i]}: x${qty}`);
+    });
+    if(rows.length){lines.push(sec.label);rows.forEach(r=>lines.push(r));lines.push('');}
+  });
+  const eRows=[];
+  Object.entries(state.entree||{}).forEach(([i,qty])=>{
+    if(qty>0){
+      const name=MENU.entree[i].name;
+      const sides=state.entreeSides[i]||[];
+      eRows.push(`  ${name}: x${qty}${sides.length?' | Sides: '+sides.join(', '):' | No sides selected'}`);
+    }
+  });
+  if(eRows.length){lines.push('ENTRÉE MEALS');eRows.forEach(r=>lines.push(r));lines.push('');}
+  const notes=document.getElementById('notes-field').value.trim();
+  if(notes){lines.push('NOTES');lines.push('  '+notes);}
+  return lines.join('\n');
+}
+
+async function submitOrder(){
+  if(!pickup){
+    document.getElementById('error-msg').style.display='block';
+    document.getElementById('po-tue').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;btn.textContent='Sending...';
+  const orderText=buildOrderText();
+  try{
+    const res=await fetch(FORMSPREE,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        pickup:pickup==='tuesday'?'Tuesday pickup':'Friday pickup',
+        order:orderText,
+        notes:document.getElementById('notes-field').value.trim()||'None'
+      })
+    });
+    if(res.ok){
+      document.getElementById('confirm-box').style.display='block';
+      btn.textContent='Order submitted';
+      document.getElementById('confirm-box').scrollIntoView({behavior:'smooth'});
+    } else {
+      btn.disabled=false;btn.textContent='Submit my order';
+      alert('Something went wrong. Please try again.');
+    }
+  } catch(e){
+    btn.disabled=false;btn.textContent='Submit my order';
+    alert('Connection error. Please check your internet and try again.');
+  }
+}
+
+buildSimpleSection('breakfast-items',MENU.breakfast,'breakfast');
+buildSimpleSection('salad-items',MENU.salad,'salad');
+buildSimpleSection('casserole-items',MENU.casserole,'casserole');
+buildSimpleSection('bowl-items',MENU.bowl,'bowl');
+buildEntreeSection();
+buildSimpleSection('baked-items',MENU.baked,'baked');
+</script>
+</body>
+</html>
